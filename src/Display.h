@@ -1,7 +1,8 @@
 #pragma once
 
-#include <vector>
 #include <windows.h>
+
+#include "FrameBuffer.h"
 
 class Display
 {
@@ -12,12 +13,11 @@ public:
     Display(const Display&) = delete;
     Display& operator=(const Display&) = delete;
 
-    void Present();
-    void Clear(char c = ' ');
-    void SetChar(int x, int y, char c);
+    void Present(const FrameBuffer& frameBuffer);
 
 private:
-    static constexpr WORD WhiteOnBlack = FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE; 
+    static constexpr char Ramp[] = " .-~=c#@";
+    static constexpr int RampLength = sizeof(Ramp) - 1;
 
     HANDLE m_hOutput = nullptr;
     HANDLE m_hOriginalOutput = nullptr;

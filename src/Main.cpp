@@ -15,23 +15,20 @@ int main(int argc, char* argv[])
     SetWindowPos(hWnd, nullptr, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
 
     Display display(WIDTH, HEIGHT, 14, L"Cascadia Mono");
+    FrameBuffer frameBuffer(WIDTH, HEIGHT);
 
     while (true)
     {
-        display.Clear('.');
-    
-        bool b = true;
-        for (int x = 0; x < WIDTH; x++)
-        {
-            for (int y = 0; y < HEIGHT; y++)
-            {
-                if (b) display.SetChar(x, y, '@');
-                b = !b;
-            }
-            b = !b;
-        }
+        frameBuffer.Clear();
 
-        display.Present();
+        for (int y = 0; y < HEIGHT; y++)
+        {
+            for (int x = 0; x < WIDTH; x++)
+            {
+                frameBuffer.SetBrightness(x, y, 8.0f / WIDTH * x);
+            }
+        }
+        display.Present(frameBuffer);
     }
     SetWindowLong(hWnd, GWL_STYLE, originalStyle);
 

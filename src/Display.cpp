@@ -48,8 +48,19 @@ Display::~Display()
         CloseHandle(m_hOutput);
 }
 
-void Display::Present()
+void Display::Present(const FrameBuffer& frameBuffer)
 {
+    const uint8_t* buffer = frameBuffer.GetBuffer();
+
+    for (int i = 0; i < m_width * m_height; i++)
+    {
+        uint8_t rampIndex = buffer[i];
+        if (rampIndex > RampLength - 1) rampIndex = RampLength - 1;
+
+        m_screenBuffer[i].Char.AsciiChar = Ramp[rampIndex];
+        m_screenBuffer[i].Attributes = FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE;
+    }
+
     COORD bufferSize = {(SHORT) m_width, (SHORT) m_height};
     COORD bufferCoord = {0, 0};
     SMALL_RECT writeRegion = {0, 0, (SHORT)(m_width - 1), (SHORT)(m_height - 1)};
@@ -70,23 +81,4 @@ void Display::Present()
     }
 
     WriteConsoleOutputA(m_hOutput, m_screenBuffer.data(), bufferSize, bufferCoord, &writeRegion);
-}
-
-void Display::Clear(char c)
-{
-    for (auto& cell : m_screenBuffer)
-    {
-        cell.Char.AsciiChar = c;
-        cell.Attributes = WhiteOnBlack;
-    }
-}
-
-void Display::SetChar(int x, int y, char c)
-{
-    if (x < 0 || x >= m_width || y < 0 || y >= m_height)
-        return;
-
-    size_t i = static_cast<size_t>(y) * m_width + x;
-    m_screenBuffer[i].Char.AsciiChar = c;
-    m_screenBuffer[i].Attributes = WhiteOnBlack;
 }
