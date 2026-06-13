@@ -1,12 +1,9 @@
 #pragma once
 
-#include <cstdint>
-#include <windows.h>
-
 class Display
 {
 public:
-    Display(int width, int height, int fontSize, const wchar_t* fontName);
+    Display(int width, int height, int fontSize, const wchar_t* fontName, const char* title = "Console");
     ~Display();
 
     Display(const Display&) = delete;
@@ -21,10 +18,12 @@ private:
     HANDLE m_hOutput = nullptr;
     HANDLE m_hOriginalOutput = nullptr;
 
+    LONG m_originalStyle;
+
     int m_width;
     int m_height;
 
     int m_fontSize;
 
-    CHAR_INFO* m_screenBuffer;
+    CHAR_INFO* m_screenBuffer = nullptr;
 };

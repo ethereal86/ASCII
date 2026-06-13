@@ -1,7 +1,5 @@
 #pragma once
 
-#include <cstdint>
-
 class FrameBuffer
 {
 public:
@@ -18,11 +16,11 @@ public:
 
     inline int GetWidth() const { return m_width; }
     inline int GetHeight() const { return m_height; }  
-    inline const uint8_t* GetData() const { return m_buffer; }
+    inline const uint8_t* GetData() const { return m_data; }
 
 private:
     int m_width;
     int m_height;
 
-    uint8_t* m_buffer;
+    uint8_t* m_data;
 };

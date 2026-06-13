@@ -1,8 +1,7 @@
+#include <pch.h>
 #include "Rasterizer.h"
 
-#include <cmath>
-
-void Rasterizer::DrawLine(FrameBuffer& framebuffer, ivec2 a, ivec2 b, uint8_t brightness)
+void Rasterizer::DrawLine(FrameBuffer& framebuffer, Vec2i a, Vec2i b, uint8_t brightness)
 {
     int dx = std::abs(b.x - a.x);
     int dy = std::abs(b.y - a.y);
@@ -29,7 +28,7 @@ void Rasterizer::DrawLine(FrameBuffer& framebuffer, ivec2 a, ivec2 b, uint8_t br
     }
 }
 
-void Rasterizer::DrawTriangle(FrameBuffer& framebuffer, ivec2 a, ivec2 b, ivec2 c, uint8_t brightness)
+void Rasterizer::DrawTriangle(FrameBuffer& framebuffer, Vec2i a, Vec2i b, Vec2i c, uint8_t brightness)
 {
     int minX = std::min({a.x, b.x, c.x});
     int maxX = std::max({a.x, b.x, c.x});
@@ -41,7 +40,7 @@ void Rasterizer::DrawTriangle(FrameBuffer& framebuffer, ivec2 a, ivec2 b, ivec2 
     maxX = std::min(maxX, framebuffer.GetWidth() - 1);
     maxY = std::min(maxY, framebuffer.GetHeight() - 1);
 
-    auto edge = [](const ivec2& p0, const ivec2& p1, int px, int py)
+    auto edge = [](const Vec2i& p0, const Vec2i& p1, int px, int py)
     {
         return (px - p0.x) * (p1.y - p0.y) - (py - p0.y) * (p1.x - p0.x);
     };

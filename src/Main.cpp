@@ -1,22 +1,16 @@
-#include "Display.h"
-#include "Rasterizer.h"
+#include <pch.h>
+#include "Platform/Display.h"
 
-#define WIDTH 72
-#define HEIGHT 54
+#include "Renderer/Rasterizer.h"
+#include "Renderer/Viewport.h"
+
+#define WIDTH 80
+#define HEIGHT 60
 
 int main(int argc, char* argv[])
 {
-    SetConsoleTitleA("ASCII 3D");
-
-    HWND hWnd = GetConsoleWindow();
-    LONG originalStyle = GetWindowLong(hWnd, GWL_STYLE);
-    LONG style = originalStyle;
-    style &= ~(WS_SIZEBOX | WS_MAXIMIZEBOX | WS_VSCROLL | WS_HSCROLL);
-    SetWindowLong(hWnd, GWL_STYLE, style);
-    SetWindowPos(hWnd, nullptr, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
-
-    Display display(WIDTH, HEIGHT, 14, L"Cascadia Mono");
-    FrameBuffer frameBuffer(WIDTH, HEIGHT);
+    Display display(WIDTH, HEIGHT, 14, L"Cascadia Mono", "ASCII 3D");
+    FrameBuffer framebuffer(WIDTH, HEIGHT);
 
     Viewport viewport;
     viewport.x = 0;
@@ -24,34 +18,34 @@ int main(int argc, char* argv[])
     viewport.width = WIDTH;
     viewport.height = HEIGHT;
 
-    vec3 vertices[] =
+    Vec3f vertices[] =
     {
-        {0.2f, 0.7f, 0.0f},
-        {-0.3f, -0.3f, 0.0f},
-        {0.7f, -0.3f, 0.0f},
-
-        {0.0f, 0.5f, 0.0f},
-        {-0.5f, -0.5f, 0.0f},
-        {0.5f, -0.5f, 0.0f}
+        {-0.5f, 0.5f, 0.0f},
+        {0.5f, 0.5f, 0.0f},
+        {0.5f, -0.5f, 0.0f},
+        {-0.5f, -0.5f, 0.0f}
     };
 
+    float t = 0.0;
     while (true)
     {
-        frameBuffer.Clear();
-        
-        for (size_t i = 0; i < sizeof(vertices) / sizeof(vertices[0]); i += 3)
-        {
-            Rasterizer::DrawTriangle(frameBuffer,
-                viewport.Transform(vertices[i]), 
-                viewport.Transform(vertices[i + 1]),
-                viewport.Transform(vertices[i + 2]),
-                i < 3 ? 64 : 255
-            );
-        }
+        framebuffer.Clear();
 
-        display.Present(frameBuffer.GetData());
+        Mat4 modelMat = Mat4::RotateZ(t) * Mat4::RotateX(t) * Mat4::RotateY(t);
+        
+        Vec2i screenVerts[4];
+        for (int i = 0; i < 4; i++)
+        {
+            Vec4f clip = modelMat * Vec4f(vertices[i], 1.0f);
+            screenVerts[i] = viewport.Transform(clip.PerspectiveDivide());
+        }
+        Rasterizer::DrawTriangle(framebuffer, screenVerts[0], screenVerts[1], screenVerts[2], 255);
+        Rasterizer::DrawTriangle(framebuffer, screenVerts[0], screenVerts[2], screenVerts[3], 128);
+
+        display.Present(framebuffer.GetData());
+
+        t += 0.001;
     }
-    SetWindowLong(hWnd, GWL_STYLE, originalStyle);
 
     return 0;
 }

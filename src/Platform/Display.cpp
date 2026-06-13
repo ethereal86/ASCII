@@ -1,6 +1,7 @@
+#include <pch.h>
 #include "Display.h"
 
-Display::Display(int width, int height, int fontSize, const wchar_t* fontName)
+Display::Display(int width, int height, int fontSize, const wchar_t* fontName, const char* title)
     : m_width(width), m_height(height), m_fontSize(fontSize)
 {
     m_hOriginalOutput = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -38,10 +39,22 @@ Display::Display(int width, int height, int fontSize, const wchar_t* fontName)
     GetConsoleCursorInfo(m_hOutput, &cci);
     cci.bVisible = FALSE;
     SetConsoleCursorInfo(m_hOutput, &cci);
+
+    HWND hWnd = GetConsoleWindow();
+    m_originalStyle = GetWindowLong(hWnd, GWL_STYLE);
+    LONG style = m_originalStyle;
+    style &= ~(WS_SIZEBOX | WS_MAXIMIZEBOX | WS_VSCROLL | WS_HSCROLL);
+    SetWindowLong(hWnd, GWL_STYLE, style);
+    SetWindowPos(hWnd, nullptr, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
+
+    SetConsoleTitleA("ASCII 3D");
 }
 
 Display::~Display()
 {
+    HWND hWnd = GetConsoleWindow();
+    SetWindowLong(hWnd, GWL_STYLE, m_originalStyle);
+
     if (m_hOriginalOutput)
         SetConsoleActiveScreenBuffer(m_hOriginalOutput);
 
