@@ -1,4 +1,5 @@
 #include "Display.h"
+#include "Rasterizer.h"
 
 #define WIDTH 72
 #define HEIGHT 54
@@ -17,18 +18,38 @@ int main(int argc, char* argv[])
     Display display(WIDTH, HEIGHT, 14, L"Cascadia Mono");
     FrameBuffer frameBuffer(WIDTH, HEIGHT);
 
+    Viewport viewport;
+    viewport.x = 0;
+    viewport.y = 0;
+    viewport.width = WIDTH;
+    viewport.height = HEIGHT;
+
+    vec3 vertices[] =
+    {
+        {0.2f, 0.7f, 0.0f},
+        {-0.3f, -0.3f, 0.0f},
+        {0.7f, -0.3f, 0.0f},
+
+        {0.0f, 0.5f, 0.0f},
+        {-0.5f, -0.5f, 0.0f},
+        {0.5f, -0.5f, 0.0f}
+    };
+
     while (true)
     {
         frameBuffer.Clear();
-
-        for (int y = 0; y < HEIGHT; y++)
+        
+        for (size_t i = 0; i < sizeof(vertices) / sizeof(vertices[0]); i += 3)
         {
-            for (int x = 0; x < WIDTH; x++)
-            {
-                frameBuffer.SetBrightness(x, y, 8.0f / WIDTH * x);
-            }
+            Rasterizer::DrawTriangle(frameBuffer,
+                viewport.Transform(vertices[i]), 
+                viewport.Transform(vertices[i + 1]),
+                viewport.Transform(vertices[i + 2]),
+                i < 3 ? 64 : 255
+            );
         }
-        display.Present(frameBuffer);
+
+        display.Present(frameBuffer.GetData());
     }
     SetWindowLong(hWnd, GWL_STYLE, originalStyle);
 

@@ -1,8 +1,7 @@
 #pragma once
 
+#include <cstdint>
 #include <windows.h>
-
-#include "FrameBuffer.h"
 
 class Display
 {
@@ -13,7 +12,7 @@ public:
     Display(const Display&) = delete;
     Display& operator=(const Display&) = delete;
 
-    void Present(const FrameBuffer& frameBuffer);
+    void Present(const uint8_t* framebuffer);
 
 private:
     static constexpr char Ramp[] = " .-~=c#@";
@@ -27,5 +26,5 @@ private:
 
     int m_fontSize;
 
-    std::vector<CHAR_INFO> m_screenBuffer;
+    CHAR_INFO* m_screenBuffer;
 };

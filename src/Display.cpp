@@ -2,7 +2,6 @@
 
 Display::Display(int width, int height, int fontSize, const wchar_t* fontName)
     : m_width(width), m_height(height), m_fontSize(fontSize)
-    , m_screenBuffer(static_cast<size_t>(width) * height)
 {
     m_hOriginalOutput = GetStdHandle(STD_OUTPUT_HANDLE);
 
@@ -14,6 +13,8 @@ Display::Display(int width, int height, int fontSize, const wchar_t* fontName)
         NULL
     );
     SetConsoleActiveScreenBuffer(m_hOutput);
+
+    m_screenBuffer = new CHAR_INFO[static_cast<size_t>(width) * height];
 
     SMALL_RECT windowRect = {0, 0, 1, 1};
     SetConsoleWindowInfo(m_hOutput, TRUE, &windowRect);
@@ -46,16 +47,19 @@ Display::~Display()
 
     if (m_hOutput)
         CloseHandle(m_hOutput);
+
+    delete[] m_screenBuffer;
 }
 
-void Display::Present(const FrameBuffer& frameBuffer)
+void Display::Present(const uint8_t* framebuffer)
 {
-    const uint8_t* buffer = frameBuffer.GetBuffer();
+    size_t count = static_cast<size_t>(m_width) * m_height;
 
-    for (int i = 0; i < m_width * m_height; i++)
+    for (size_t i = 0; i < count; i++)
     {
-        uint8_t rampIndex = buffer[i];
-        if (rampIndex > RampLength - 1) rampIndex = RampLength - 1;
+        int rampIndex = 1 + (framebuffer[i] - 1) * 6 / 254;
+        if (framebuffer[i] == 0) rampIndex = 0;
+        if (framebuffer[i] == 255) rampIndex = 7;
 
         m_screenBuffer[i].Char.AsciiChar = Ramp[rampIndex];
         m_screenBuffer[i].Attributes = FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE;
@@ -64,6 +68,8 @@ void Display::Present(const FrameBuffer& frameBuffer)
     COORD bufferSize = {(SHORT) m_width, (SHORT) m_height};
     COORD bufferCoord = {0, 0};
     SMALL_RECT writeRegion = {0, 0, (SHORT)(m_width - 1), (SHORT)(m_height - 1)};
+
+    WriteConsoleOutputA(m_hOutput, m_screenBuffer, bufferSize, bufferCoord, &writeRegion);
 
     CONSOLE_FONT_INFOEX fontInfo = {};
     fontInfo.cbSize = sizeof(fontInfo);
@@ -77,8 +83,7 @@ void Display::Present(const FrameBuffer& frameBuffer)
         fontInfo.dwFontSize.X = m_fontSize;
         fontInfo.dwFontSize.Y = m_fontSize;
         fontInfo.FontFamily = FF_DONTCARE;
+        
         SetCurrentConsoleFontEx(m_hOutput, FALSE, &fontInfo);   
     }
-
-    WriteConsoleOutputA(m_hOutput, m_screenBuffer.data(), bufferSize, bufferCoord, &writeRegion);
 }
